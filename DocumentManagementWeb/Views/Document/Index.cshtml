@@ -1,0 +1,103 @@
+﻿
+@{
+    ViewBag.Title = "Upload File";
+}
+
+<h2>Upload files</h2>
+<div>
+    <div class="form-group">
+        <div id="updatePanelFile" class="alert" role="alert" style="display:none;">
+
+        </div>
+    </div>
+    <div class="form-group">
+        <input type="file" id="file1" />
+    </div>
+    <input id="btnPostFile" class="btn btn-default" type="button" value="Upload" />
+</div>
+
+<div>
+    <table id="docTable" class="table table-bordered">
+    </table>
+
+</div>
+
+
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            getDocumentData();
+            $('#btnPostFile').click(function () {
+                if ($('#file1').val() == '') {
+                    alert('Please select file');
+                    return;
+                }
+
+                var formData = new FormData();
+                var file = $('#file1')[0];
+                formData.append('file', file.files[0]);
+                $.ajax({
+                    url: 'http://localhost:62819/api/document',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (d) {
+                        getDocumentData();
+                        $('#updatePanelFile').addClass('alert-success').html('<strong>Success!</strong>').show();
+                        $('#file1').val(null);
+                    },
+                    error: function () {
+                        $('#updatePanelFile').addClass('alert-error').html('<strong>Failed!</strong> Please try again.').show();
+                    }
+                });
+            });
+
+            $("#docTable").on('click', '.btnDelete', function () {
+                var id = $(this).attr("dat");
+                deleteDocumentData(id);
+            });
+
+
+            function getDocumentData() {
+                $.ajax({
+                    url: 'http://localhost:62819/api/document',
+                    type: 'GET',
+                    //data: formData,
+                    contentType: "application/json",
+                    //processData: false,
+                    success: function (data) {
+                        $("#docTable").empty();
+                        $("#docTable").append("<thead><tr><td>Id</td><td>Name</td><td>Document Name</td><td>Action</td></tr></thead>");
+                        $("#docTable").append("<tbody></tbody>");
+                        for (var i = 0; i < data.length; i++) {
+                            var tr = $('<tr/>');
+                            tr.append("<td>" + data[i].Id + "</td>");
+                            tr.append("<td>" + data[i].Name + "</td>");
+                            tr.append("<td>" + data[i].DocumentFileName + "</td>");
+                            tr.append("<td><button class='btnDelete' dat='" + data[i].Id + "'>Delete</button></td>");
+                            $("#docTable tbody").append(tr);
+                        }
+                    },
+                    error: function () {
+                        $('#updatePanelFile').addClass('alert-error').html('<strong>Failed!</strong> Please try again.').show();
+                    }
+                });
+            }
+            function deleteDocumentData(id) {
+                $.ajax({
+                    url: 'http://localhost:62819/api/document/'+id,
+                    type: 'DELETE',                    
+                    contentType: "application/json",
+                    success: function (d) {
+                        getDocumentData();
+                    },
+                    error: function () {
+                        $('#updatePanelFile').addClass('alert-error').html('<strong>Failed!</strong> Please try again.').show();
+                    }
+                });
+            }
+        });
+    </script>
+}
